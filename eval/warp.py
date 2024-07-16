@@ -5,6 +5,7 @@ from torch.utils.cpp_extension import load_inline
 import random, math, numpy
 nn = torch.nn
 F = nn.functional
+from fused_convs import convs_forward
 
 seed = 1242
 random.seed(seed)
@@ -13,29 +14,7 @@ torch.manual_seed(seed)
 torch.cuda.manual_seed(seed)
 torch.cuda.manual_seed_all(seed)
 
-cuda_source = (Path(__file__).parent / 'conv1d2.cu').read_text()
-
-cpp_source = """
-at::Tensor warpscan_forward(const at::Tensor &gates, const at::Tensor &tokens, const at::Tensor &out, const bool reverse);
-"""
-
-module = load_inline(
-	name='warpscan',
-	cpp_sources=[cpp_source],
-	cuda_sources=[cuda_source],
-	functions=['warpscan_forward'],
-	verbose=True,
-	extra_cuda_cflags=[
-		"-O3",
-		"-std=c++17",
-		"--ptxas-options=-v",
-		"-lineinfo",
-		"--fmad", "false",
-		"-U__CUDA_NO_HALF_OPERATORS__", "-U__CUDA_NO_HALF_CONVERSIONS__",
-		"-U__CUDA_NO_BFLOAT16_OPERATORS__", "-U__CUDA_NO_BFLOAT16_CONVERSIONS__",
-	]
-)
-warpscan_forward = module.warpscan_forward
+warpscan_forward = convs_forward
 
 def test_correctness(x, y, atol=1e-1):
 	return torch.allclose(x, y, atol=atol)
@@ -44,13 +23,9 @@ def test_correctness(x, y, atol=1e-1):
 class Scan(torch.autograd.Function):
 	@staticmethod
 	def forward(ctx, gates, tokens):
-		# assert gates.is_contiguous()
-		# assert tokens.is_contiguous()
-		# output = torch.zeros(tokens.size(0), tokens.size(1), gates.size(0)).to('cuda')
 		states = warpscan_forward(gates, tokens)
-		# states = scan_forward(gates, tokens)
-		# ctx.save_for_backward(states, gates)
-		return states.mT.contiguous()
+		# return states.mT.contiguous()
+		return states
 
 	@staticmethod
 	def backward(ctx, grad_output):

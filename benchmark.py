@@ -3,7 +3,7 @@ import torch
 nn = torch.nn
 F = nn.functional
 
-from csrc.convs import warp
+from eval import warp
 fused_conv1d = warp.fused_conv1d
 prepare_data = warp.prepare_data
 import random, math, numpy, time, sys
@@ -56,15 +56,17 @@ if __name__ == "__main__":
 			timing2 = torch.empty(10)
 
 			for r in range(timing1.size(0)):
-				x = torch.randn(B, 80, D, requires_grad=False).to('cuda')
+				x = torch.randn(B, 80, D, requires_grad=False).to('cuda').to(torch.float16)
 
 
 
 				with torch.no_grad():
 					w, y = prepare_data(conv.weight.data, x)
+					w = w.to(torch.float16)
+					w2 = conv.weight.data.to(torch.float16)
 					# warmup
 					fused_conv1d(w, y)
-					F.conv1d(x, conv.weight.data)
+					F.conv1d(x, w2)
 
 					start_time = time.perf_counter()
 					for _ in range(steps):
@@ -73,7 +75,7 @@ if __name__ == "__main__":
 
 					start_time = time.perf_counter()
 					for _ in range(steps):
-						F.conv1d(x, conv.weight.data)
+						F.conv1d(x, w2)
 					timing2[r] = time.perf_counter() - start_time
 
 

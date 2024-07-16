@@ -14,24 +14,21 @@
     CHECK_IS_HALF_OR_BFLOAT_OR_FLOAT(x)
 
 
-torch::Tensor convs(
-    torch::Tensor x,
+torch::Tensor warpscan(
     torch::Tensor w,
-    torch::Tensor b
+    torch::Tensor x
 );
 
 
 
 torch::Tensor convs_fwd(
-    torch::Tensor x,
     torch::Tensor w,
-    torch::Tensor b
+    torch::Tensor x
 )
 {
     CHECK_INPUT(x);
     CHECK_INPUT(w);
-    CHECK_INPUT(b);
-    CHECK_SAME_TYPE(w, b);
-    return convs(x, w, b);
+    // CHECK_SAME_TYPE(w, b);
+    return warpscan(w, x);
 }
 

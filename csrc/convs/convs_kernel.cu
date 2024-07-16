@@ -103,7 +103,7 @@ torch::Tensor convs(
     torch::Tensor out = torch::empty({b, d, l_out}, x.options());
 
     DISPATCH_FLOAT_AND_HALF_AND_BF16(x.scalar_type(), weight.scalar_type(),
-        "depthwise conv 1d fwd bhl",
+        "conv1d",
         ([&]
             { conv1d_kernel<input_t, weight_t><<<grid, block>>>(
                     static_cast<input_t *>(x.data_ptr()),
