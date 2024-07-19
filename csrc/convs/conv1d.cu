@@ -71,7 +71,6 @@ warpscan(const at::Tensor &gates, const at::Tensor &tokens, const at::Tensor &ou
     const auto strides = tokens.strides();
     const int batch_stride = strides[0];
     const int dim_stride = strides[1];
-    const int gate_stride = gates.size(0) / 8;
     TORCH_CHECK(tokens.stride(-1) == 1 || tokens.size(-1) == 1);
     TORCH_CHECK(gates.stride(-1) == 1 || gates.size(-1) == 1);
     const int batch_stride_o = out.strides()[0];

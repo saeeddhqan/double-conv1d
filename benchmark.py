@@ -4,6 +4,7 @@ nn = torch.nn
 F = nn.functional
 
 from eval import warp
+# from csrc.convs import warp
 fused_conv1d = warp.fused_conv1d
 prepare_data = warp.prepare_data
 import random, math, numpy, time, sys
@@ -31,15 +32,14 @@ def plot_vs(x, y1_mean, y2_mean):
 
 
 if __name__ == "__main__":
-
 	B, T, D = 1, 256, 2
 	d_in = 1
 	steps = 100
 	vanilla = False
 
 	# filter_lens = [8, 64, 128, 256, 512, 768]
-	filter_lens = [64]
-	dlen =  [101, 201, 301]
+	filter_lens = [64, 128, 256, 512]
+	dlen =  [100, 200, 300, 500]
 
 	results = PrettyTable()
 	results.field_names = ['B', 'F', 'D', 'conv1d (ms)', 'fused conv1d (ms)', 'speedup']
@@ -56,17 +56,17 @@ if __name__ == "__main__":
 			timing2 = torch.empty(10)
 
 			for r in range(timing1.size(0)):
-				x = torch.randn(B, 80, D, requires_grad=False).to('cuda').to(torch.float16)
+				x = torch.randn(B, 80, D, requires_grad=False).to('cuda')
 
 
 
 				with torch.no_grad():
 					w, y = prepare_data(conv.weight.data, x)
-					w = w.to(torch.float16)
-					w2 = conv.weight.data.to(torch.float16)
+					w2 = conv.weight.data
+					y2 = x
 					# warmup
 					fused_conv1d(w, y)
-					F.conv1d(x, w2)
+					F.conv1d(y2, w2)
 
 					start_time = time.perf_counter()
 					for _ in range(steps):

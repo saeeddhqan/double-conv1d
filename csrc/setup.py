@@ -9,7 +9,7 @@ setup(
     ext_modules=[
         CUDAExtension('fused_convs', [
             'main.cpp',
-            'convs/conv1d2.cu',
+            'convs/conv1d_setup.cu',
         ],
         extra_compile_args={'cxx': ['-O3'],
                              'nvcc': ['-O3', '-lineinfo', '--use_fast_math', '-std=c++17', '--ptxas-options=-v',

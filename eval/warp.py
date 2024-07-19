@@ -69,6 +69,7 @@ def scan2(gates, tokens):
 	# exit()
 	return res2
 
+
 fused_conv1d = Scan.apply
 def prepare_data(gates, tokens):
 	tokens = tokens.unfold(2, 3, 1).transpose(2, 1).contiguous().flatten(2)
@@ -77,9 +78,11 @@ def prepare_data(gates, tokens):
 	tokens = F.pad(tokens, (0, p))
 	return gates, tokens
 
+
 def fused_conv(gates, tokens):
 	gates, tokens = prepare_data(gates, tokens)
 	return Scan.apply(gates, tokens)
+
 
 def ref_conv(x, conv1, chunklen=2):
 	return F.conv1d(x, conv1.weight.data)
@@ -91,7 +94,7 @@ if __name__ == "__main__":
 	for _ in range(3):
 		x = torch.randn(B, T, C).to('cuda')
 		ref = ref_conv(x, conv1)
-		fused = fused_conv(conv1.weight.data, x) # + conv1.bias.data.view(1, c_out, 1)
+		fused = fused_conv(conv1.weight.data, x).mT.contiguous() # + conv1.bias.data.view(1, c_out, 1)
 		print(test_correctness(ref, fused, atol=1e-3))
 		print(test_correctness(ref, fused))
 

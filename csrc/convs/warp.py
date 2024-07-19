@@ -16,7 +16,7 @@ torch.cuda.manual_seed_all(seed)
 cuda_source = (Path(__file__).parent / 'conv1d2.cu').read_text()
 
 cpp_source = """
-at::Tensor warpscan_forward(const at::Tensor &gates, const at::Tensor &tokens, const at::Tensor &out, const bool reverse);
+torch::Tensor warpscan_forward(const torch::Tensor gates, const torch::Tensor tokens);
 """
 
 module = load_inline(
@@ -46,11 +46,11 @@ class Scan(torch.autograd.Function):
 	def forward(ctx, gates, tokens):
 		# assert gates.is_contiguous()
 		# assert tokens.is_contiguous()
-		# output = torch.zeros(tokens.size(0), tokens.size(1), gates.size(0)).to('cuda')
 		states = warpscan_forward(gates, tokens)
 		# states = scan_forward(gates, tokens)
 		# ctx.save_for_backward(states, gates)
-		return states.mT.contiguous()
+		# return states.mT.contiguous()
+		return states
 
 	@staticmethod
 	def backward(ctx, grad_output):
